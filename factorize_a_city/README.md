@@ -42,8 +42,12 @@ optimization with frozen network weights. For the test stacks provided, we have
 already computed their alignment with this process and saved the results in
 `alignment.npy`.
 
+python -m factorize_a_city.align_stack --misaligned_stack_folder=factorize_a_city/data/000057less
+
 Command: \
 `python -m factorize_a_city.align_stack --misaligned_stack_folder=factorize_a_city/data/000057`
+#memory
+PS D:\pworkspace\seeingSpace\nerfs\google-research>  python d:\pworkspace\seeingSpace\nerfs\google-research\factorize_a_city\align_stack.py --misaligned_stack_folder=factorize_a_city\data\data\007520
 
 #### Decomposition
 
@@ -51,8 +55,7 @@ Recovers the intrinsic image components (log reflectance and log shading) from
 an input stack of panoramas.
 
 Command: \
-`python -m factorize_a_city.compute_intrinsic_components --stack_folder=factorize_a_city/data/000057
---output_dir=factorize_a_city/intrinsic_image_results`
+`python -m factorize_a_city.compute_intrinsic_components --stack_folder=factorize_a_city/data/000057 --output_dir=factorize_a_city\intrinsic_image_results`
 
 #### Sun Position Relighting
 
@@ -61,7 +64,7 @@ specified from `data/lighting_context.npy` by `lighting_context_index`,
 generates a sequence of sun positions around the entire input scene.
 
 Command: \
-`python -m factorize_a_city.rotate_sun_azimuth --stack_folder=factorize_a_city/data/000057
+`python -m factorize_a_city.rotate_sun_azimuth --stack_folder=factorize_a_city/data/000057 \
 --lighting_context_index=1 --azimuth_frame_rate=10 --output_dir=factorize_a_city/rotate_results`
 
 #### Lighting Condition Relighting
@@ -72,3 +75,16 @@ exemplar test panoramas. These factors are saved in `factorize_a_city/data/azimu
 
 Command: \
 `python -m factorize_a_city.relight_scene --stack_folder=factorize_a_city/data/000057 --output_dir=factorize_a_city/relit_results`
+
+960 x 320 png
+im = resize(im, [480, 960])
+python D:\pworkspace\seeingSpace\nerfs\google-research\factorize_a_city\libs\image_alignment_test.py
+https://svd360.istreetview.com/
+
+
+model learns an illumination descriptor that can
+be meaningfully transferred from one image to another, e.g., to relight an image
+with an illumination from a completely dierent scene. Such \mix-and-match"
+capabilities are beyond the power of standard intrinsic images.
+
+An NPY file is just a binary file with a small header and followed by the raw array data (object arrays are different, but we're considering numbers now). In short, you can find the size of this header with a function like this:

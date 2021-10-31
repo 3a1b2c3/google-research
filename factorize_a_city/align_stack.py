@@ -45,20 +45,19 @@ FLAGS = tf.flags.FLAGS
 def main(unused_argv):
   if not FLAGS.misaligned_stack_folder:
     raise ValueError("misaligned_stack_folder was not defined")
-
   alignment_save_location = os.path.join(FLAGS.misaligned_stack_folder,
                                          "alignment.npy")
   if not FLAGS.overwrite:
     if os.path.exists(alignment_save_location):
       raise ValueError("Existing alignment found. "
                        "Pass --overwrite flag to overwrite it.")
-
+  print("_________________0____________________", FLAGS.misaligned_stack_folder)
   misaligned_stack = stack_io.read_stack(
       FLAGS.misaligned_stack_folder, require_alignment=False)
-
+  print("_________________1____________________", misaligned_stack)
   # [0, 1]-ranged panoramas of shape [384, 960].
   misaligned_stack = tf.constant(misaligned_stack, dtype=tf.float32)
-
+  print("_________________2____________________", misaligned_stack)
   # Randomly initialized warp parameters.
   alignment_params = tf.get_variable(
       "alignment_params",
@@ -67,12 +66,13 @@ def main(unused_argv):
       initializer=tf.random_normal_initializer(0, 1e-3),
   )
   tanh_alignment_params = tf.nn.tanh(alignment_params)
+  print("________________  tanh_alignment_params ____________________" ,   tanh_alignment_params )
 
   # Align images using parameters.
   alignment_module = image_alignment.ImageAlignment(regularization=0.3)
   aligned_stack = alignment_module.align_images(misaligned_stack,
                                                 tanh_alignment_params)
-
+  print("________________  aligned_stack ____________________" ,  aligned_stack )
   # Freeze weight during the decomposition.
   factorize_model = network.FactorizeEncoderDecoder(
       {
@@ -82,30 +82,31 @@ def main(unused_argv):
 
   stack_factors = factorize_model.compute_decomposition(
       aligned_stack, single_image_decomposition=False, average_stack=True)
-
+  print("_________________3____________________" , stack_factors)
   individual_ref = stack_factors["individual_log_reflectance"]
   stack_size = individual_ref.shape.as_list()[0]
+  print(stack_size, "_________________4____________________",  individual_ref)
+  # Tensor("sub_2:0", shape=(8, 320, 960, 3), dtype=float32)
   ref_consistency_loss = tf.zeros([])
   for i in range(stack_size):
     for j in range(i + 1, stack_size):
       ref_consistency_loss += tf.reduce_mean(
           tf.abs(individual_ref[i] - individual_ref[j]))
-
   warp_opt = tf.train.AdamOptimizer(1e-4, name="Adam", beta1=0., epsilon=1e-4)
   warp_train_step = warp_opt.minimize(
       ref_consistency_loss, var_list=[alignment_params])
-
+  print("_________________6____________________")
   # Restore factorization network weights from ckpt.
   tf.train.init_from_checkpoint("./factorize_a_city/ckpt/factorize_model.ckpt",
                                 {"decomp_internal/": "decomp_internal/"})
   sess = tf.Session()
   sess.run(tf.global_variables_initializer())
-
+  print("_________________8____________________") #[3,384,961,3], [8,384,960,2]
   for i in range(FLAGS.num_alignment_steps):
     loss, _ = sess.run([ref_consistency_loss, warp_train_step])
     if i % 10 == 0:
       print("[%d / %d] Steps, Loss: %5f" % (i, FLAGS.num_alignment_steps, loss))
-
+  print("_________________9____________________")
   print("[%d / %d] Steps, Loss: %5f" %
         (FLAGS.num_alignment_steps, FLAGS.num_alignment_steps, loss))
   np_alignment_weights = sess.run(tanh_alignment_params)

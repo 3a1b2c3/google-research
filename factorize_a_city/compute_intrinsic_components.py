@@ -51,7 +51,7 @@ def main(unused_argv):
   stack_factors = factorize_model.compute_decomposition(
       aligned_stack, single_image_decomposition=False, average_stack=True)
 
-  # Restore factorization network weights from ckpt.
+  # Restore factorization network weights from ckpt. ?
   tf.train.init_from_checkpoint("./factorize_a_city/ckpt/factorize_model.ckpt",
                                 {"decomp_internal/": "decomp_internal/"})
   sess = tf.Session()

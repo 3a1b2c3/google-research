@@ -48,6 +48,7 @@ def read_and_preprocess_panoramas(filepath):
     [0, 1]
   """
   im = imageio.imread(filepath)[:, :, :3] / 255.
+  print(filepath)
   # Resize to 480, 960.
   im = resize(im, [480, 960])
 
@@ -79,10 +80,17 @@ def read_stack(filepath, require_alignment=True):
     alignment parameters of shape [S, 8, 32, 2].
   """
   num_files = len(tf.io.gfile.glob(os.path.join(filepath, "*.png")))
+  jpg = 0
+  if not num_files:
+    num_files = len(tf.io.gfile.glob(os.path.join(filepath, "*.jpg")))
+    jpg = 1
   ims = []
   for i in range(num_files):
+    label = "%02d.png"
+    if jpg:
+      label = "%02d.jpg"
     ims.append(
-        read_and_preprocess_panoramas(os.path.join(filepath, "%02d.png" % i)))
+        read_and_preprocess_panoramas(os.path.join(filepath, label % i)))
   stacked_ims = np.stack(ims, axis=0)
   if require_alignment:
     alignment_fp = os.path.join(filepath, "alignment.npy")

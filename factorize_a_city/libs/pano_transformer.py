@@ -50,7 +50,7 @@ import numpy as np
 import tensorflow.compat.v1 as tf
 from tensorflow.contrib import resampler
 
-
+# pano_stack, yaw_rotation_radians)
 def rotate_pano_horizontally(input_feature_map, yaw_angle):
   """Rotates input_feature_map by yaw_angle by horizontally translating pixels.
 
@@ -76,6 +76,7 @@ def rotate_pano_horizontally(input_feature_map, yaw_angle):
   # Number of input dimensions.
   tfshape = tf.shape(input_feature_map)
   batch_size = tfshape[0]
+  
   height = tfshape[1]
   width = tfshape[2]
 
@@ -101,7 +102,7 @@ def rotate_pano_horizontally(input_feature_map, yaw_angle):
   # panorama.
   input_feature_map = tf.concat(
       [input_feature_map, input_feature_map[:, :, :1]], axis=2)
-
+  print("__ rotate_pano_horizontally(tfshape: done ", tfshape)
   return resampler.resampler(
       input_feature_map,
       tf.stack([wrapped_x_pixel_coord, y_pixel_coord], axis=-1))

@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Defines a factorize encoder-decoder model for panoramas."""
+"""Defines a factorize enc
+oder-decoder model for panoramas."""
 import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
@@ -22,7 +23,7 @@ from factorize_a_city.libs import sn_ops
 from factorize_a_city.libs import spade
 from factorize_a_city.libs import utils
 
-
+#Tensor  <dtype: 'float32'>
 def recomposite_from_log_components(log_reflectance, log_shading):
   """Combines log_reflectance and log_shading to produce an rgb image.
 
@@ -35,6 +36,16 @@ def recomposite_from_log_components(log_reflectance, log_shading):
   Returns:
     An rgb image ranging from [0, 255] of shape [B, H, W, 3]
   """
+  #tf.get_default_graph().finalize()
+  print(" relit_results3a ")
+  
+  tmp = tf.exp(log_reflectance + log_shading)
+  print(" relit_results3b ")
+  tmp = tf.clip_by_value(tmp, 0., 255.)
+  tf.get_default_graph().finalize()
+  print(" relit_results3c ")
+ 
+  return tmp
   return tf.clip_by_value(tf.exp(log_reflectance + log_shading), 0., 255.)
 
 
@@ -115,8 +126,18 @@ class FactorizeEncoderDecoder():
         log_shading [B, H, W, 3] A shading image for each input image.
         individual_log_reflectance [B, H, W, 3] A reflectance image computed
           from each individual image.
+          
+          
+    Args:
+      aligned_stack: [B, H, W, 3] An aligned panorama stack.
+
+    Returns:
+      A [B, H//8, W//8, D] feature map where D is self.permanent_dim.
+
     """
     individual_permanent_factors = self.extract_permanent(aligned_stack)
+    print("_________compute_decomposition _batch_size ") # B
+    print(individual_permanent_factors.shape.as_list()[0])
     batch_size = individual_permanent_factors.shape.as_list()[0]
 
     if not single_image_decomposition:
@@ -188,7 +209,7 @@ class FactorizeEncoderDecoder():
     postconvfn_actnorm = lambda x, y: tf.nn.leaky_relu(
         self.normalization_illumination(x, y))
     pad_fn = lambda x, y: utils.pad_panorama_for_convolutions(x, y, "reflect")
-
+    print("extract_illumination: ",aligned_stack)
     with tf.compat.v1.variable_scope("decomp_internal", reuse=tf.AUTO_REUSE):
       with tf.compat.v1.variable_scope("shading"):
         net = layers.conv2d(
@@ -398,7 +419,7 @@ class FactorizeEncoderDecoder():
     # input is azimuth-normalized representation.
     rot_permanent = pano_transformer.rotate_pano_horizontally(
         permanent_factor, azimuth_factor)
-
+    print("__ rotate_pano_horizontally(tfshape:  permanent_factor ",  permanent_factor)
     # Positional encoding to break the generator's shift invariance.
     radian_vec = tf.linspace(-np.pi, np.pi,
                              output_w + 1)[tf.newaxis, :-1] + tf.zeros([bsz, 1])

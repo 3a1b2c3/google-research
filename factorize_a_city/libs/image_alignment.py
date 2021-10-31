@@ -194,6 +194,7 @@ def bspline_warp(cps, image, degree, regularization=0, pano_pad=False):
     x_clipped = tf.clip_by_value(x_coord_sample, 0, big_w - 1)
 
   stacked_resampler_coords = tf.stack([x_clipped, y_clipped], axis=-1)
+  # print(dir(image))
   return contrib_resampler.resampler(image, stacked_resampler_coords)
 
 

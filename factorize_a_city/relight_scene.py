@@ -15,6 +15,17 @@
 
 """Relights a given scene from stack_folder under sample illuminations."""
 
+import os
+from tensorflow.python.client import device_lib
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+""".git\with tf.Session() as sess:
+     with tf.device("/cpu:0"):
+       https://stackoverflow.com/questions/36584907/tensor-flow-toggle-between-cpu-gpu
+       Allocation of 716636160 exceeds 10% of system memory.
+"""
+
+
 import tensorflow.compat.v1 as tf
 
 from factorize_a_city.libs import image_alignment
@@ -32,7 +43,7 @@ FLAGS = tf.flags.FLAGS
 def main(unused_argv):
   if not FLAGS.stack_folder:
     raise ValueError("stack_folder was not defined")
-
+  device_lib.list_local_devices()  
   # Load example stacks. Each panorama has shape [384, 960, 3] and has values
   # between [0, 1].
   (permanent_stack, alignment_params) = stack_io.read_stack(FLAGS.stack_folder)
@@ -66,10 +77,12 @@ def main(unused_argv):
                                 {"decomp_internal/": "decomp_internal/"})
   sess = tf.Session()
   sess.run(tf.global_variables_initializer())
+  print("relit_results1: " +FLAGS.output_dir)
   out = sess.run(relit_results)
+  print("relit_results2: " +FLAGS.output_dir)
   stack_io.write_stack_images(FLAGS.output_dir, out / 255.)
-
-
+  print("relit_results3")
+  
 if __name__ == "__main__":
   # spectral normalization does not work with TF2.0
   tf.disable_eager_execution()
